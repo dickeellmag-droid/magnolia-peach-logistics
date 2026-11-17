@@ -1,4 +1,6 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.11.0/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head><body>
 <title>Magnolia Peach Logistics</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,12 +23,15 @@
 
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--body-text);
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -320,12 +325,14 @@ footer {
   color: rgba(255,255,255,0.75);
   text-align: center;
   font-size: 0.82rem;
-  min-height: 120px;
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 2rem 1rem;
   width: 100%;
+  margin: 0;
+  flex-shrink: 0;
   box-sizing: border-box;
 }
 footer strong { color: var(--gold); }
@@ -508,42 +515,90 @@ footer strong { color: var(--gold); }
 
 <!-- DRIVERS -->
 <div class="page" id="page-drivers">
-  <section style="padding-top: 3rem;">
-    <div class="section-inner" style="text-align:center;">
-      
-      <p class="section-label">Driver Access</p>
-      <h2 class="section-title">Driver Portal</h2>
-      <p class="section-sub" style="margin-left:auto; margin-right:auto;">Enter your access code to continue.</p>
+  <section style="padding-top:3rem; padding-bottom:3rem;">
+    <div class="section-inner">
+      <p class="section-label" style="text-align:center;">Driver Access</p>
+      <h2 class="section-title" style="text-align:center;">Driver Portal</h2>
 
-      <!-- LOGIN GATE -->
-      <div id="driver-login" style="max-width:360px; margin:0 auto;">
-        <div class="form-card" style="text-align:left;">
+      <!-- LOGIN -->
+      <div id="dp-login" style="max-width:360px;margin:0 auto;">
+        <div class="form-card">
           <div class="form-group" style="margin-bottom:1.2rem;">
-            <label for="d-access-code">Access Code</label>
-            <input type="password" id="d-access-code" placeholder="Enter your code" style="width:100%;">
+            <label for="dp-code">Access Code</label>
+            <input type="password" id="dp-code" placeholder="Enter your code" style="width:100%;letter-spacing:0.1em;" onkeydown="if(event.key==='Enter')checkDPCode()">
           </div>
-          <button class="submit-btn" onclick="checkDriverCode()" style="width:100%;">Enter Portal</button>
-          <p id="d-code-error" style="color:#00702D; font-size:0.83rem; margin-top:0.7rem; display:none;">Incorrect code. Contact dispatch.</p>
+          <button class="submit-btn" onclick="checkDPCode()" style="width:100%;">Enter Portal</button>
+          <p id="dp-code-err" style="color:#c0392b;font-size:0.82rem;margin-top:0.6rem;display:none;">Incorrect code. Contact dispatch.</p>
         </div>
       </div>
 
-      <!-- DELIVERY FORM (hidden until login) -->
-      <div id="driver-form" style="display:none; max-width:560px; margin:0 auto;">
-        <div class="form-card" style="text-align:left;">
-          <form id="driverForm" onsubmit="handleDriverSubmit(event)">
-            <div class="form-grid">
-              <div class="form-group"><label for="d-first">First Name</label><input type="text" id="d-first" required placeholder="Your first name"></div>
-              <div class="form-group"><label for="d-last">Last Name</label><input type="text" id="d-last" required placeholder="Your last name"></div>
-              <div class="form-group full"><label for="d-load">Load Number</label><input type="text" id="d-load" required placeholder="Load number from dispatch"></div>
-              <div class="form-group full"><label for="d-client">Client / Recipient Name</label><input type="text" id="d-client" required placeholder="Name of person who received the load"></div>
-              <div class="form-group"><label for="d-pickup-photo">Pickup Photo</label><input type="file" id="d-pickup-photo" accept="image/*" capture="environment" style="padding:0.5rem; width:100%;"></div>
-              <div class="form-group"><label for="d-delivery-photo">Delivery Photo</label><input type="file" id="d-delivery-photo" accept="image/*" capture="environment" style="padding:0.5rem; width:100%;"></div>
-            </div>
-            <button type="submit" class="submit-btn" style="width:100%;">Submit Delivery</button>
-            <div class="success-msg" id="driverSuccess">Delivery submitted! Dispatch has been notified.</div>
-          </form>
+      <!-- PORTAL CONTENT -->
+      <div id="dp-portal" style="display:none; max-width:600px; margin:0 auto;">
+
+        <!-- BOL banner -->
+        <div style="background:#00702D;border-radius:12px;padding:1rem 1.4rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;">
+          <div>
+            <div style="font-size:0.7rem;letter-spacing:0.09em;color:rgba(255,255,255,0.75);text-transform:uppercase;">Bill of Lading</div>
+            <div id="dp-bol" style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:0.04em;">MPL-2026-0001</div>
+          </div>
+          <div id="dp-date" style="font-size:0.78rem;color:rgba(255,255,255,0.75);text-align:right;line-height:1.5;"></div>
         </div>
-        <p style="font-size:0.88rem; color:var(--body-text); line-height:1.7; margin-top:1.5rem;">Questions? Contact dispatch: <strong style="color:var(--rose)">loaded@magnoliapeachlogistics.com</strong></p>
+
+        <!-- Driver info -->
+        <div class="form-card" style="margin-bottom:1.2rem;">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Driver Information</div>
+          <div class="form-grid">
+            <div class="form-group"><label for="dp-first">First Name</label><input type="text" id="dp-first" placeholder="First name"></div>
+            <div class="form-group"><label for="dp-last">Last Name</label><input type="text" id="dp-last" placeholder="Last name"></div>
+            <div class="form-group full"><label for="dp-phone">Phone Number</label><input type="tel" id="dp-phone" placeholder="(000) 000-0000"></div>
+          </div>
+        </div>
+
+        <!-- Pickup photos -->
+        <div class="form-card" style="margin-bottom:1.2rem;">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Pickup Photos</div>
+          <label style="display:flex;align-items:center;gap:0.5rem;background:#f5f5f5;border:1.5px dashed #00702D;border-radius:8px;padding:0.7rem 1rem;cursor:pointer;font-size:0.85rem;color:#00702D;font-weight:600;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            Add Pickup Photos
+            <input type="file" id="dp-pickup-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="dpAddPhotos('pickup',this)">
+          </label>
+          <div id="dp-pickup-prev" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.6rem;"></div>
+        </div>
+
+        <!-- Delivery photos -->
+        <div class="form-card" style="margin-bottom:1.2rem;">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Delivery Photos</div>
+          <label style="display:flex;align-items:center;gap:0.5rem;background:#f5f5f5;border:1.5px dashed #00702D;border-radius:8px;padding:0.7rem 1rem;cursor:pointer;font-size:0.85rem;color:#00702D;font-weight:600;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            Add Delivery Photos
+            <input type="file" id="dp-delivery-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="dpAddPhotos('delivery',this)">
+          </label>
+          <div id="dp-delivery-prev" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.6rem;"></div>
+        </div>
+
+        <!-- Signature -->
+        <div class="form-card" style="margin-bottom:1.2rem;">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Client Signature — Received in Good Order</div>
+          <div style="border:1.5px solid #d0d0d0;border-radius:8px;overflow:hidden;position:relative;background:#fafafa;">
+            <canvas id="dp-sig" style="display:block;width:100%;height:150px;touch-action:none;cursor:crosshair;"></canvas>
+            <div id="dp-sig-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#A0AECF;font-size:0.8rem;pointer-events:none;">Sign here</div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:0.4rem;">
+            <button onclick="dpClearSig()" style="background:none;border:1px solid #d0d0d0;border-radius:6px;padding:0.3rem 0.8rem;font-size:0.75rem;cursor:pointer;color:#A0AECF;">Clear</button>
+          </div>
+          <div class="form-group" style="margin-top:0.8rem;">
+            <label for="dp-client">Client Name (print)</label>
+            <input type="text" id="dp-client" placeholder="Client full name">
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button id="dp-submit-btn" onclick="dpSubmit()" class="submit-btn" style="width:100%;">Submit & Generate BOL</button>
+        <p id="dp-loader" style="display:none;text-align:center;color:#A0AECF;font-size:0.85rem;margin-top:0.8rem;">Generating PDF and sending...</p>
+        <div id="dp-success" style="display:none;background:#e8f5ed;color:#00702D;border:1.5px solid #00702D;border-radius:10px;padding:1rem;text-align:center;font-weight:600;margin-top:1rem;">✓ BOL submitted! A copy has been sent to dispatch.</div>
+        <div id="dp-error" style="display:none;background:#fff0f0;color:#c0392b;border:1.5px solid #c0392b;border-radius:10px;padding:1rem;text-align:center;font-weight:600;margin-top:1rem;">Something went wrong. Please try again or contact dispatch.</div>
+
+        <p style="font-size:0.85rem;color:#A0AECF;text-align:center;margin-top:1.5rem;">Questions? <strong style="color:#00702D;">loaded@magnoliapeachlogistics.com</strong></p>
       </div>
     </div>
   </section>
@@ -645,20 +700,188 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-function checkDriverCode() {
-  var code = document.getElementById('d-access-code').value.trim();
-  if (code === 'MPL2026') {
-    document.getElementById('driver-login').style.display = 'none';
-    document.getElementById('driver-form').style.display = 'block';
+// ── EMAILJS INIT ──
+emailjs.init('fPv0uJyUx_yAf4_zl');
+
+// ── DRIVER PORTAL ──
+const dpPhotos = { pickup: [], delivery: [] };
+let dpSigDrawing = false, dpSigMark = false;
+
+function checkDPCode() {
+  const code = document.getElementById('dp-code').value.trim();
+  if (code.toUpperCase() === 'MPL2026') {
+    document.getElementById('dp-login').style.display = 'none';
+    document.getElementById('dp-portal').style.display = 'block';
+    dpInitPortal();
   } else {
-    document.getElementById('d-code-error').style.display = 'block';
+    document.getElementById('dp-code-err').style.display = 'block';
   }
 }
 
-function handleDriverSubmit(e) {
-  e.preventDefault();
-  document.getElementById('driverSuccess').style.display = 'block';
-  e.target.querySelector('.submit-btn').disabled = true;
+function dpInitPortal() {
+  const seq = String(Math.floor(1000 + Math.random() * 9000));
+  const year = new Date().getFullYear();
+  document.getElementById('dp-bol').textContent = 'MPL-' + year + '-' + seq;
+  const now = new Date();
+  document.getElementById('dp-date').innerHTML =
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) +
+    '<br>' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  dpInitSig();
+}
+
+function dpAddPhotos(type, input) {
+  Array.from(input.files).forEach(function(file) {
+    const ts = new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      dpPhotos[type].push({ dataUrl: e.target.result, timestamp: ts });
+      dpRenderPhotos(type);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function dpRenderPhotos(type) {
+  const c = document.getElementById('dp-' + type + '-prev');
+  c.innerHTML = '';
+  dpPhotos[type].forEach(function(p, i) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1.5px solid #d0d0d0;';
+    d.innerHTML = '<img src="' + p.dataUrl + '" style="width:100%;height:100%;object-fit:cover;">' +
+      '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:0.45rem;padding:2px 3px;line-height:1.3;">' + p.timestamp + '</div>' +
+      '<button onclick="dpRemovePhoto('' + type + '',' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(255,0,0,0.75);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;line-height:1;">×</button>';
+    c.appendChild(d);
+  });
+}
+
+function dpRemovePhoto(type, i) { dpPhotos[type].splice(i, 1); dpRenderPhotos(type); }
+
+function dpInitSig() {
+  const canvas = document.getElementById('dp-sig');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.strokeStyle = '#0A0F1E'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  function pos(e) { const r = canvas.getBoundingClientRect(), s = e.touches ? e.touches[0] : e; return { x: s.clientX - r.left, y: s.clientY - r.top }; }
+  canvas.addEventListener('mousedown', function(e) { dpSigDrawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('dp-sig-hint').style.display = 'none'; });
+  canvas.addEventListener('mousemove', function(e) { if (!dpSigDrawing) return; dpSigMark = true; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+  canvas.addEventListener('mouseup', function() { dpSigDrawing = false; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); dpSigDrawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('dp-sig-hint').style.display = 'none'; }, { passive: false });
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); if (!dpSigDrawing) return; dpSigMark = true; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: false });
+  canvas.addEventListener('touchend', function(e) { e.preventDefault(); dpSigDrawing = false; }, { passive: false });
+}
+
+function dpClearSig() {
+  const canvas = document.getElementById('dp-sig');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  dpSigMark = false;
+  document.getElementById('dp-sig-hint').style.display = 'block';
+}
+
+async function dpSubmit() {
+  const firstName = document.getElementById('dp-first').value.trim();
+  const lastName = document.getElementById('dp-last').value.trim();
+  const phone = document.getElementById('dp-phone').value.trim();
+  const clientName = document.getElementById('dp-client').value.trim();
+  const bol = document.getElementById('dp-bol').textContent;
+  if (!firstName || !lastName) { alert('Please enter driver name.'); return; }
+  if (!dpSigMark) { alert('Please get the client signature before submitting.'); return; }
+
+  const btn = document.getElementById('dp-submit-btn');
+  btn.disabled = true;
+  document.getElementById('dp-loader').style.display = 'block';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+    const W = 215.9, M = 15;
+    doc.setFillColor(0,112,45); doc.rect(0,0,W,28,'F');
+    doc.setFillColor(253,208,13); doc.rect(0,28,W,2,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
+    doc.text('BILL OF LADING', W-M, 13, { align:'right' });
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text('Magnolia Peach Logistics LLC', W-M, 20, { align:'right' });
+    var y = 38;
+    doc.setFillColor(232,245,237); doc.roundedRect(M,y,W-M*2,14,2,2,'F');
+    doc.setTextColor(0,112,45); doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text(bol, M+4, y+9);
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text(new Date().toLocaleString('en-US'), W-M-4, y+9, { align:'right' });
+    y += 20;
+    doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text('DRIVER INFORMATION', M+3, y+5); y += 10;
+    doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Driver Name', M+2, y); doc.setTextColor(10,15,30); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(firstName + ' ' + lastName, M+2, y+5); y += 12;
+    doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Phone', M+2, y); doc.setTextColor(10,15,30); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(phone || '—', M+2, y+5); y += 14;
+    if (dpPhotos.pickup.length > 0) {
+      doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
+      doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+      doc.text('PICKUP PHOTOS', M+3, y+5); y += 10;
+      var px = M;
+      for (var i = 0; i < Math.min(dpPhotos.pickup.length,4); i++) {
+        try { doc.addImage(dpPhotos.pickup[i].dataUrl,'JPEG',px,y,42,32); doc.setFontSize(5.5); doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.text(dpPhotos.pickup[i].timestamp,px,y+34,{maxWidth:42}); } catch(err) {}
+        px += 46; if (px + 42 > W-M) { px = M; y += 42; }
+      }
+      y += 42;
+    }
+    if (dpPhotos.delivery.length > 0) {
+      if (y + 50 > 270) { doc.addPage(); y = 20; }
+      doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
+      doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+      doc.text('DELIVERY PHOTOS', M+3, y+5); y += 10;
+      var px2 = M;
+      for (var j = 0; j < Math.min(dpPhotos.delivery.length,4); j++) {
+        try { doc.addImage(dpPhotos.delivery[j].dataUrl,'JPEG',px2,y,42,32); doc.setFontSize(5.5); doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.text(dpPhotos.delivery[j].timestamp,px2,y+34,{maxWidth:42}); } catch(err) {}
+        px2 += 46; if (px2 + 42 > W-M) { px2 = M; y += 42; }
+      }
+      y += 42;
+    }
+    if (y + 50 > 270) { doc.addPage(); y = 20; }
+    doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text('CLIENT SIGNATURE — RECEIVED IN GOOD ORDER', M+3, y+5); y += 10;
+    doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Client Name', M+2, y); doc.setTextColor(10,15,30); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(clientName || '—', M+2, y+5); y += 14;
+    if (dpSigMark) { try { doc.addImage(document.getElementById('dp-sig').toDataURL('image/png'),'PNG',M,y,80,30); doc.setDrawColor(200,200,200); doc.rect(M,y,80,30); } catch(err) {} y += 34; }
+    doc.setFillColor(0,112,45); doc.rect(0,272,W,8,'F');
+    doc.setFillColor(253,208,13); doc.rect(0,270,W,2,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text('Magnolia Peach Logistics LLC  •  loaded@magnoliapeachlogistics.com  •  Confidential', W/2, 277, { align:'center' });
+
+    const pdfBase64 = doc.output('datauristring');
+    var photoSummary = '';
+    if (dpPhotos.pickup.length) photoSummary += 'Pickup: ' + dpPhotos.pickup.length + ' photo(s) — ' + dpPhotos.pickup.map(function(p){return p.timestamp;}).join(', ') + '\n';
+    if (dpPhotos.delivery.length) photoSummary += 'Delivery: ' + dpPhotos.delivery.length + ' photo(s) — ' + dpPhotos.delivery.map(function(p){return p.timestamp;}).join(', ');
+
+    await emailjs.send('service_qcks0nt', 'template_76xpuml', {
+      bol_number: bol,
+      driver_name: firstName + ' ' + lastName,
+      driver_cdl: '',
+      driver_phone: phone || '—',
+      client_name: clientName || '—',
+      photo_summary: photoSummary || 'No photos',
+      submission_time: new Date().toLocaleString('en-US'),
+      pdf_data: pdfBase64,
+    });
+
+    doc.save(bol + '_BOL.pdf');
+    document.getElementById('dp-loader').style.display = 'none';
+    document.getElementById('dp-success').style.display = 'block';
+    btn.style.display = 'none';
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('dp-loader').style.display = 'none';
+    document.getElementById('dp-error').style.display = 'block';
+    btn.disabled = false;
+  }
 }
 
 function showPage(name) {
