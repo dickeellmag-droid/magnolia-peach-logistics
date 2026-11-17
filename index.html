@@ -552,28 +552,6 @@ footer strong { color: var(--gold); }
           </div>
         </div>
 
-        <!-- Pickup photos -->
-        <div class="form-card" style="margin-bottom:1.2rem;">
-          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Pickup Photos</div>
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#f5f5f5;border:1.5px dashed #00702D;border-radius:8px;padding:0.7rem 1rem;cursor:pointer;font-size:0.85rem;color:#00702D;font-weight:600;justify-content:center;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-            Add Pickup Photos
-            <input type="file" id="dp-pickup-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="dpAddPhotos('pickup',this)">
-          </label>
-          <div id="dp-pickup-prev" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.6rem;"></div>
-        </div>
-
-        <!-- Delivery photos -->
-        <div class="form-card" style="margin-bottom:1.2rem;">
-          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Delivery Photos</div>
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#f5f5f5;border:1.5px dashed #00702D;border-radius:8px;padding:0.7rem 1rem;cursor:pointer;font-size:0.85rem;color:#00702D;font-weight:600;justify-content:center;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-            Add Delivery Photos
-            <input type="file" id="dp-delivery-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="dpAddPhotos('delivery',this)">
-          </label>
-          <div id="dp-delivery-prev" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.6rem;"></div>
-        </div>
-
         <!-- Signature -->
         <div class="form-card" style="margin-bottom:1.2rem;">
           <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00702D;border-bottom:2px solid #FDD00D;display:inline-block;padding-bottom:4px;margin-bottom:1rem;">Client Signature — Received in Good Order</div>
@@ -702,7 +680,6 @@ document.addEventListener('DOMContentLoaded', function() {
 if(typeof emailjs !== 'undefined') emailjs.init('fPv0uJyUx_yAf4_zl');
 
 // ── DRIVER PORTAL ──
-const dpPhotos = { pickup: [], delivery: [] };
 let dpSigDrawing = false, dpSigMark = false;
 
 function checkDPCode() {
@@ -726,34 +703,6 @@ function dpInitPortal() {
     '<br>' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   dpInitSig();
 }
-
-function dpAddPhotos(type, input) {
-  Array.from(input.files).forEach(function(file) {
-    const ts = new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      dpPhotos[type].push({ dataUrl: e.target.result, timestamp: ts });
-      dpRenderPhotos(type);
-    };
-    reader.readAsDataURL(file);
-  });
-  input.value = '';
-}
-
-function dpRenderPhotos(type) {
-  const c = document.getElementById('dp-' + type + '-prev');
-  c.innerHTML = '';
-  dpPhotos[type].forEach(function(p, i) {
-    const d = document.createElement('div');
-    d.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1.5px solid #d0d0d0;';
-    d.innerHTML = '<img src="' + p.dataUrl + '" style="width:100%;height:100%;object-fit:cover;">' +
-      '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:0.45rem;padding:2px 3px;line-height:1.3;">' + p.timestamp + '</div>' +
-      `<button onclick="dpRemovePhoto('${type}',${i})" style="position:absolute;top:2px;right:2px;background:rgba(255,0,0,0.75);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;line-height:1;">×</button>`;
-    c.appendChild(d);
-  });
-}
-
-function dpRemovePhoto(type, i) { dpPhotos[type].splice(i, 1); dpRenderPhotos(type); }
 
 function dpInitSig() {
   const canvas = document.getElementById('dp-sig');
@@ -817,29 +766,6 @@ async function dpSubmit() {
     doc.setTextColor(100,100,100); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
     doc.text('Phone', M+2, y); doc.setTextColor(10,15,30); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
     doc.text(phone || '—', M+2, y+5); y += 14;
-    if (dpPhotos.pickup.length > 0) {
-      doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
-      doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
-      doc.text('PICKUP PHOTOS', M+3, y+5); y += 10;
-      var px = M;
-      for (var i = 0; i < Math.min(dpPhotos.pickup.length,4); i++) {
-        try { doc.addImage(dpPhotos.pickup[i].dataUrl,'JPEG',px,y,42,32); doc.setFontSize(5.5); doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.text(dpPhotos.pickup[i].timestamp,px,y+34,{maxWidth:42}); } catch(err) {}
-        px += 46; if (px + 42 > W-M) { px = M; y += 42; }
-      }
-      y += 42;
-    }
-    if (dpPhotos.delivery.length > 0) {
-      if (y + 50 > 270) { doc.addPage(); y = 20; }
-      doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
-      doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
-      doc.text('DELIVERY PHOTOS', M+3, y+5); y += 10;
-      var px2 = M;
-      for (var j = 0; j < Math.min(dpPhotos.delivery.length,4); j++) {
-        try { doc.addImage(dpPhotos.delivery[j].dataUrl,'JPEG',px2,y,42,32); doc.setFontSize(5.5); doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.text(dpPhotos.delivery[j].timestamp,px2,y+34,{maxWidth:42}); } catch(err) {}
-        px2 += 46; if (px2 + 42 > W-M) { px2 = M; y += 42; }
-      }
-      y += 42;
-    }
     if (y + 50 > 270) { doc.addPage(); y = 20; }
     doc.setFillColor(0,112,45); doc.rect(M,y,W-M*2,7,'F');
     doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
@@ -853,23 +779,19 @@ async function dpSubmit() {
     doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','normal');
     doc.text('Magnolia Peach Logistics LLC  •  loaded@magnoliapeachlogistics.com  •  Confidential', W/2, 277, { align:'center' });
 
-    const pdfBase64 = doc.output('datauristring');
-    var photoSummary = '';
-    if (dpPhotos.pickup.length) photoSummary += 'Pickup: ' + dpPhotos.pickup.length + ' photo(s) — ' + dpPhotos.pickup.map(function(p){return p.timestamp;}).join(', ') + '\n';
-    if (dpPhotos.delivery.length) photoSummary += 'Delivery: ' + dpPhotos.delivery.length + ' photo(s) — ' + dpPhotos.delivery.map(function(p){return p.timestamp;}).join(', ');
+    // Download PDF locally first
+    doc.save(bol + '_BOL.pdf');
 
-    await emailjs.send('service_qcks0nt', '5zlychi', {
+    // Send text summary only (no PDF attachment to stay within EmailJS limits)
+    await emailjs.send('service_qcks0nt', 'template_76xpuml', {
       bol_number: bol,
       driver_name: firstName + ' ' + lastName,
       driver_cdl: '',
       driver_phone: phone || '—',
       client_name: clientName || '—',
-      photo_summary: photoSummary || 'No photos',
+      photo_summary: 'N/A',
       submission_time: new Date().toLocaleString('en-US'),
-      pdf_data: pdfBase64,
     });
-
-    doc.save(bol + '_BOL.pdf');
     document.getElementById('dp-loader').style.display = 'none';
     document.getElementById('dp-success').style.display = 'block';
     btn.style.display = 'none';
