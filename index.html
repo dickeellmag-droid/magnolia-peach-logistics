@@ -858,7 +858,7 @@ async function dpSubmit() {
     if (dpPhotos.pickup.length) photoSummary += 'Pickup: ' + dpPhotos.pickup.length + ' photo(s) — ' + dpPhotos.pickup.map(function(p){return p.timestamp;}).join(', ') + '\n';
     if (dpPhotos.delivery.length) photoSummary += 'Delivery: ' + dpPhotos.delivery.length + ' photo(s) — ' + dpPhotos.delivery.map(function(p){return p.timestamp;}).join(', ');
 
-    await emailjs.send('service_qcks0nt', 'template_76xpuml', {
+    await emailjs.send('service_qcks0nt', '5zlychi', {
       bol_number: bol,
       driver_name: firstName + ' ' + lastName,
       driver_cdl: '',
