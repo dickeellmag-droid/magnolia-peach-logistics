@@ -834,7 +834,7 @@ async function dpSubmit() {
       submission_time: new Date().toLocaleString('en-US'),
       name: 'MPL Driver Portal',
       email: 'noreply@magnoliapeachlogistics.com',
-      signature_image: dpSigMark ? '(signature captured — see driver copy)' : '(no signature)',
+      signature_image: sigDataUrl || '(no signature)',
     });
     document.getElementById('dp-loader').style.display = 'none';
     document.getElementById('dp-success').style.display = 'block';
