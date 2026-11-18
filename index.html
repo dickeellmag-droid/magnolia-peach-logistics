@@ -36,7 +36,21 @@ body {
   color: var(--body-text);
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   min-height: 100dvh;
+}
+body > footer {
+  margin-top: auto;
+}
+/* iPhone */
+@supports (-webkit-touch-callout: none) and (max-device-width: 430px) {
+  body { min-height: -webkit-fill-available; }
+}
+/* iPad */
+@supports (-webkit-touch-callout: none) and (min-device-width: 768px) {
+  body { min-height: -webkit-fill-available; }
+  footer { padding-bottom: calc(2rem + 20px); }
 }
 
 /* NAV — same bg as site, logo blends in */
