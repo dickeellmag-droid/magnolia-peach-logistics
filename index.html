@@ -21,7 +21,11 @@
 
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
+html {
+  margin: 0;
+  padding: 0;
+}
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -327,16 +331,56 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
+  padding: 2rem max(1rem, env(safe-area-inset-left, 0px));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+  width: 100%;
   margin: 0;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 footer strong { color: var(--gold); }
+
+/* ANIMATIONS */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatLogo {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes shimmerGold {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.hero-visual img {
+  filter: none;
+}
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero-text h1 {
+  animation: fadeSlideUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
+}
+.hero-text p {
+  animation: fadeSlideUp 0.8s 0.15s cubic-bezier(0.22,1,0.36,1) both;
+}
+.hero-btns {
+  animation: fadeSlideUp 0.8s 0.28s cubic-bezier(0.22,1,0.36,1) both;
+}
+.service-card {
+  transition: transform 0.22s, box-shadow 0.22s;
+}
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0,112,45,0.13);
+}
 
 /* MOBILE */
 @media (max-width: 750px) {
@@ -573,8 +617,9 @@ footer strong { color: var(--gold); }
 
         <!-- Submit -->
         <button id="dp-submit-btn" onclick="dpSubmit()" class="submit-btn" style="width:100%;">Submit & Generate BOL</button>
-        <p id="dp-loader" style="display:none;text-align:center;color:#A0AECF;font-size:0.85rem;margin-top:0.8rem;">Generating PDF and sending...</p>
+        <p id="dp-loader" style="display:none;text-align:center;color:#A0AECF;font-size:0.85rem;margin-top:0.8rem;">Sending to dispatch...</p>
         <div id="dp-success" style="display:none;background:#e8f5ed;color:#00702D;border:1.5px solid #00702D;border-radius:10px;padding:1rem;text-align:center;font-weight:600;margin-top:1rem;">✓ BOL submitted! A copy has been sent to dispatch.</div>
+        <div id="dp-error" style="display:none;background:#fdf0f0;color:#c0392b;border:1.5px solid #c0392b;border-radius:10px;padding:1rem;text-align:center;font-size:0.85rem;margin-top:1rem;"></div>
         <div id="dp-error" style="display:none;background:#fff0f0;color:#c0392b;border:1.5px solid #c0392b;border-radius:10px;padding:1rem;text-align:center;font-weight:600;margin-top:1rem;">Something went wrong. Please try again or contact dispatch.</div>
 
         <p style="font-size:0.85rem;color:#A0AECF;text-align:center;margin-top:1.5rem;">Questions? <strong style="color:#00702D;">loaded@magnoliapeachlogistics.com</strong></p>
@@ -663,6 +708,26 @@ footer strong { color: var(--gold); }
 </footer>
 
 <script>
+// Scroll animations
+(function() {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.12 });
+  function initObserver() {
+    document.querySelectorAll('section, .service-card, .stat-item, .contact-block, .gold-divider').forEach(function(el) {
+      el.classList.add('animate-on-scroll');
+      observer.observe(el);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initObserver);
+  } else {
+    initObserver();
+  }
+})();
+
 function toggleNav() {
   var nav = document.getElementById('navLinks');
   var btn = document.getElementById('hamburger');
@@ -758,6 +823,7 @@ async function dpSubmit() {
       } catch(e) {}
     }
 
+    emailjs.init('fPv0uJyUx_yAf4_zl');
     await emailjs.send('service_qcks0nt', 'template_76xpuml', {
       bol_number: bol,
       driver_name: firstName + ' ' + lastName,
@@ -777,9 +843,11 @@ async function dpSubmit() {
   } catch(err) {
     console.error(err);
     document.getElementById('dp-loader').style.display = 'none';
-    // PDF already downloaded — show success regardless of email errors
-    document.getElementById('dp-success').style.display = 'block';
-    btn.style.display = 'none';
+    var errDiv = document.getElementById('dp-error');
+    var errMsg = (err && err.text) ? err.text : (err && err.message) ? err.message : JSON.stringify(err);
+    errDiv.textContent = '⚠ Email error: ' + errMsg + ' — Status: ' + (err && err.status ? err.status : 'unknown');
+    errDiv.style.display = 'block';
+    btn.disabled = false;
   }
 }
 
