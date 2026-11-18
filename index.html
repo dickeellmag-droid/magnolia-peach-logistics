@@ -36,7 +36,7 @@ body {
   color: var(--body-text);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* NAV — same bg as site, logo blends in */
@@ -332,7 +332,7 @@ footer {
   align-items: center;
   justify-content: center;
   padding: 2rem max(1rem, env(safe-area-inset-left, 0px));
-  padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 20px));
   width: 100%;
   margin: 0;
   flex-shrink: 0;
