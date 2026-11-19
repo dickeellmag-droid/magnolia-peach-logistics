@@ -50,7 +50,7 @@ body > footer {
 /* iPad */
 @supports (-webkit-touch-callout: none) and (min-device-width: 768px) {
   body { min-height: -webkit-fill-available; }
-  footer { padding-bottom: calc(2rem + 20px); }
+  footer { padding-bottom: max(2rem, calc(env(safe-area-inset-bottom, 20px) + 1.5rem)); }
 }
 
 /* NAV — same bg as site, logo blends in */
@@ -160,10 +160,7 @@ body::before {
 
 /* GOLD DIVIDER */
 .gold-divider {
-  height: 2px;
-  background: linear-gradient(to right, transparent, var(--gold), transparent);
-  margin: 0;
-  opacity: 0.5;
+  display: none;
 }
 
 /* BUTTONS */
@@ -345,14 +342,27 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem max(1rem, env(safe-area-inset-left, 0px));
-  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 20px));
+  padding: 2rem max(1.5rem, env(safe-area-inset-left, 0px));
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem));
   width: 100%;
   margin: 0;
   flex-shrink: 0;
   box-sizing: border-box;
+  position: relative;
 }
 footer strong { color: var(--gold); }
+/* Extend footer color into the safe area on all devices */
+footer::after {
+  content: '';
+  position: fixed;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: calc(env(safe-area-inset-bottom, 0px) + 1px);
+  background: var(--rose);
+  z-index: 9999;
+  pointer-events: none;
+}
 
 /* ANIMATIONS */
 @keyframes fadeSlideUp {
@@ -485,8 +495,6 @@ footer strong { color: var(--gold); }
     </div>
   </div>
 
-  <div class="gold-divider"></div>
-
   <section>
     <div class="section-inner">
       <p class="section-label">What We Do</p>
@@ -500,8 +508,6 @@ footer strong { color: var(--gold); }
       </div>
     </div>
   </section>
-
-  <div class="gold-divider"></div>
 
   <div class="dark-band">
     <div class="section-inner">
@@ -561,8 +567,7 @@ footer strong { color: var(--gold); }
       </div>
     </div>
   </section>
-  <div class="gold-divider"></div>
-  <div class="dark-band">
+  <div class="dark-band" style="margin-top:0;">
     <div class="section-inner">
       <p class="section-label">Direct Contact</p>
       <h2 class="section-title" style="margin-bottom:0.6rem;">We Go Further For What Matters.</h2>
@@ -668,10 +673,10 @@ footer strong { color: var(--gold); }
     <div class="section-inner">
       <p class="section-label">Join Our Team</p>
       <h2 class="section-title">We're Hiring</h2>
-      <p class="section-sub" style="margin-left:auto;margin-right:auto;">Magnolia Peach Logistics is growing and we're looking for dedicated owner-operators and drivers to join our team.</p>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto;">Magnolia Peach Logistics is growing and we're looking for dedicated drivers to join our team.</p>
       <div style="max-width:660px;margin:2rem auto 0;">
         <div style="border:1.5px solid #00702D;border-radius:16px;padding:2.5rem;background:#fff;">
-          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:#0A0F1E;margin-bottom:1rem;">Owner-Operator / Driver</h3>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:#0A0F1E;margin-bottom:1rem;">CDL Driver</h3>
           <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:0.6rem;">
             <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.93rem;color:#0A0F1E;">
               <span style="color:#00702D;font-weight:700;margin-top:1px;">✓</span> Valid CDL required
@@ -701,8 +706,9 @@ footer strong { color: var(--gold); }
       
       <p class="section-label">Our Story</p>
       <h2 class="section-title">About Magnolia Peach Logistics</h2>
-      <p style="margin-bottom:1rem;">Magnolia Peach Logistics LLC is an Atlanta-based freight company dedicated to reliable, transparent, and professional transportation services.</p>
-      <p>We bring accountability and care to every load we haul — treating every shipment like it matters, because it does.</p>
+      <p style="margin-bottom:1rem;">Magnolia Peach Logistics LLC is an Atlanta-based Motor Carrier built around one idea: every load has a destination, and we make sure it gets there.</p>
+      <p style="margin-bottom:1rem;">Our compass is reliability. Whether we're sourcing a load, leasing the truck, or dispatching the driver — every decision points the same direction: forward, on time, and done right.</p>
+      <p>The name says it all — rooted in the South, moving with purpose.</p>
     </div>
   </div>
   <section>
@@ -718,7 +724,7 @@ footer strong { color: var(--gold); }
 </div>
 
 <footer style="width:100%;margin:0;box-sizing:border-box;">
-  <p>&copy; 2026 <strong>Magnolia Peach Logistics LLC</strong> &middot; Atlanta, Georgia</p>
+  <p>&copy; 2026 <strong>Magnolia Peach Logistics LLC</strong> &middot; Atlanta, Georgia &middot; USDOT# 8904308</p>
 </footer>
 
 <script>
